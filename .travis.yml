@@ -1,14 +1,17 @@
 language: go
 go:
-- 1.11.x
-- master
+  - 1.11.x
+  - master
+
+env:
+  - GO111MODULE=on
 
 install:
-- go mod download
+  - go mod download
 
 script:
-- go mod verify
-- make test
+  - go mod verify
+  - make test
 
 deploy:
   provider: releases

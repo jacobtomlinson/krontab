@@ -1,16 +1,16 @@
 package input
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
-	"fmt"
 	"os/exec"
 )
 
 func check(e error) {
-    if e != nil {
-        panic(e)
-    }
+	if e != nil {
+		panic(e)
+	}
 }
 
 // UserInput get raw input from a user with a text editor and a temporary file
@@ -30,6 +30,7 @@ func UserInput(in string) string {
 // UserEdit allow the user to edit a file
 func UserEdit(path string) string {
 	// TODO Check for EDITOR/VISUAL env var
+	// TODO Check whether the user actually made changes and error if not
 	editor := "vim"
 	editorPath, err := exec.LookPath(editor)
 	if err != nil {
