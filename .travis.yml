@@ -7,10 +7,9 @@ env:
   - GO111MODULE=on
 
 install:
-  - go mod download
+  - true
 
 script:
-  - go mod verify
   - make test
 
 deploy:
