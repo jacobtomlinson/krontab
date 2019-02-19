@@ -1,24 +1,24 @@
 package cmd
 
 import (
-    "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 
-    "github.com/jacobtomlinson/krontab/crontab"
-    "github.com/jacobtomlinson/krontab/template"
+	"github.com/jacobtomlinson/krontab/crontab"
+	"github.com/jacobtomlinson/krontab/template"
 )
 
 var editCmd = &cobra.Command{
-    Use:   "edit",
-    Short: "Edit a krontab resource",
-    Long:  `Edit a krontab resource`,
+	Use:   "edit",
+	Short: "Edit a krontab resource",
+	Long:  `Edit a krontab resource`,
 }
 
 var editTemplaceCmd = &cobra.Command{
 	Use:   "template",
 	Short: "Edit a template resource",
 	Long:  `Edit a template resource`,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO Arg checking in template editing
 		template.EditTemplate(args[0])
 	},
 }
@@ -28,7 +28,7 @@ var editCrontabCmd = &cobra.Command{
 	Short: "Edit the crontab",
 	Long:  `Edit the crontab`,
 	Run: func(cmd *cobra.Command, args []string) {
-        crontab.EditCrontab()
+		crontab.EditCrontab()
 	},
 }
 
