@@ -10,6 +10,7 @@ install:
 
 script:
   - make test
+  - make build-all
 
 deploy:
   provider: releases
