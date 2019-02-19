@@ -1,18 +1,14 @@
 language: go
 go:
-- 1.8.x
+- 1.11.x
 - master
 
-before_install:
-- curl -L -s https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64
-  -o $GOPATH/bin/dep
-- chmod +x $GOPATH/bin/dep
-
 install:
-- go get -v github.com/Masterminds/glide
-- make get-deps
+- go mod download
 
-script: make test
+script:
+- go mod verify
+- make test
 
 deploy:
   provider: releases
