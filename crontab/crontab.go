@@ -98,15 +98,15 @@ func (k KronJob) Update() error {
 			panic(err)
 		}
 		return nil
-	} else {
-		cronjob.Spec.JobTemplate.Name = k.Name
-		cronjob.Name = k.Name
-		cronjob.Spec.Schedule = k.Timing
-		cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Name = k.Name
-		cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Command = strings.Split(k.Command, " ")
-		_, err = cronjobsClient.Update(cronjob)
-		return err
 	}
+
+	cronjob.Spec.JobTemplate.Name = k.Name
+	cronjob.Name = k.Name
+	cronjob.Spec.Schedule = k.Timing
+	cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Name = k.Name
+	cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Command = strings.Split(k.Command, " ")
+	_, err = cronjobsClient.Update(cronjob)
+	return err
 }
 
 // EditCrontab generates the current crontab, allows the user to edit and then applies the changes
@@ -146,8 +146,9 @@ func EditCrontab() {
 
 // ListCrontab generates the current crontab and shows it to the user
 func ListCrontab() {
-	fmt.Println("# Welcome to krontab, a crontab like editor for Kubernetes cron jobs\n" +
-		"# ... Write more stuff here\n") // TODO Finish list blurb
+	fmt.Printf(`# Welcome to krontab, a crontab like editor for Kubernetes cron jobs
+
+`) // TODO Finish list blurb
 	fmt.Println(BuildCrontab())
 }
 

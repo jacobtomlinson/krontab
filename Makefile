@@ -8,7 +8,7 @@ GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 BUILD_DATE=$(shell date '+%Y-%m-%d-%H:%M:%S')
 IMAGE_NAME := "jacobtomlinson/krontab"
 
-default: test
+default: help
 
 help:
 	@echo 'Management commands for krontab:'
@@ -29,6 +29,23 @@ build:
 	@echo "GOPATH=${GOPATH}"
 	go build -ldflags "-X github.com/jacobtomlinson/krontab/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/jacobtomlinson/krontab/version.BuildDate=${BUILD_DATE}" -o bin/${BIN_NAME}
 
+build-linux-amd64:
+	@echo "building ${BIN_NAME} ${VERSION} - linux amd64"
+	@echo "GOPATH=${GOPATH}"
+	GOOS=linux GOARCH=amd64 go build -ldflags "-X github.com/jacobtomlinson/krontab/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/jacobtomlinson/krontab/version.BuildDate=${BUILD_DATE}" -o bin/${BIN_NAME}-linux-amd64
+
+build-linux-arm:
+	@echo "building ${BIN_NAME} ${VERSION} - linux arm"
+	@echo "GOPATH=${GOPATH}"
+	GOOS=linux GOARCH=arm go build -ldflags "-X github.com/jacobtomlinson/krontab/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/jacobtomlinson/krontab/version.BuildDate=${BUILD_DATE}" -o bin/${BIN_NAME}-linux-arm
+
+build-darwin-amd64:
+	@echo "building ${BIN_NAME} ${VERSION} - darwin arm"
+	@echo "GOPATH=${GOPATH}"
+	GOOS=darwin GOARCH=amd64 go build -ldflags "-X github.com/jacobtomlinson/krontab/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/jacobtomlinson/krontab/version.BuildDate=${BUILD_DATE}" -o bin/${BIN_NAME}-darwin-amd64
+
+build-all: build-linux-amd64 build-linux-arm build-darwin-amd64
+
 get-deps:
 	dep ensure
 
@@ -41,7 +58,7 @@ package:
 	@echo "building image ${BIN_NAME} ${VERSION} $(GIT_COMMIT)"
 	docker build --build-arg VERSION=${VERSION} --build-arg GIT_COMMIT=$(GIT_COMMIT) -t $(IMAGE_NAME):local .
 
-tag: 
+tag:
 	@echo "Tagging: latest ${VERSION} $(GIT_COMMIT)"
 	docker tag $(IMAGE_NAME):local $(IMAGE_NAME):$(GIT_COMMIT)
 	docker tag $(IMAGE_NAME):local $(IMAGE_NAME):${VERSION}
