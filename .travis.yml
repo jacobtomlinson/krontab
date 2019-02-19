@@ -16,7 +16,7 @@ deploy:
   provider: releases
   api_key:
     secure: PCV8W0I+Jeoh/nXM87xyNqcCTYgTY4nNO06ngN2eS5QEOqKbLglFfJvDuTj93mitQ00WIYhSzGPVRoZdZEUadcxtFwbN26A/pf+OuCiGjFIiEiAVqNz27HRxMOGOJ7tdjxpiPQXPNnUV8W0ipkPVZHhIc5qp86ukAMDcYchdPHYXqLY2GkZHFTQXZdi+EM9yfXy5++9ZIDTNVGfE0q++Cpi7P+c2SdQCjsPSwi4WHXKaw9G5Wn48sVX5bJlRSbfwjabmh39cWttUWuHxOJd5Qw9i5t66DiMvkL8NXB0db9wuqJtTlsHCxz49S1kIDfnhMpQINcI/kf2S8A9TWYahmHaKPxVEcxI9DLjYtUu+moxoUBq2b7JSrbkbeexSt20eQXopfyLz7q4AnDP0UxHEogUMYm78UNZmPIzphXl42keMETypEb0XEuocLXOXFszjGMzpReBJ1xh5KjXynQRhcHbDdefmMHRKOvSbm8nLRucgRoVRPeZim9hSQPsdE0ZyNHkAiU71W5btEDCKHDnxinpmIBXTwUlowh/xpBcjZXnAsUYmLDTUWfipWSwPuxQOs6AAjxclICppaKm8QNyjLnrAU7GrTZjqJ9eT3SNW+aGeADWkezuQvYmZ3h1JZiS7ttEsiDsjed4wPbziPViDCAgLBqdCRMZhi5111fROPKc=
-  file: bin/*
+  file: "bin/*"
   skip_cleanup: true
   on:
     repo: jacobtomlinson/krontab
