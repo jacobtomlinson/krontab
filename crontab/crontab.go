@@ -154,6 +154,7 @@ func ListCrontab() {
 
 // ListCronJobs gets a list of Kubernetes CronJob resources
 func ListCronJobs() []batchv1beta1.CronJob {
+	// TODO add annotation filter
 	cronjobs, err := clientset.BatchV1beta1().CronJobs(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		panic(err.Error())

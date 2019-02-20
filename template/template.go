@@ -8,12 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/shibukawa/configdir"
-
+	"github.com/jacobtomlinson/krontab/config"
 	"github.com/jacobtomlinson/krontab/input"
 )
-
-var configDir *configdir.Config
 
 var defaultCronYaml = `
 apiVersion: batch/v1beta1
@@ -55,7 +52,7 @@ func contains(s []string, e string) bool {
 
 // ListTemplates gives a list of the current cron templates
 func ListTemplates() []string {
-	files, err := ioutil.ReadDir(filepath.Join(configDir.Path, "templates"))
+	files, err := ioutil.ReadDir(filepath.Join(config.ConfigDir.Path, "templates"))
 	if err != nil {
 		panic(err)
 	}
@@ -82,7 +79,7 @@ func EditTemplate(template string) error {
 		return errors.New("you cannot edit the default template")
 	}
 	if IsTemplate(template) {
-		path := filepath.Join(configDir.Path, "templates", template+".yaml")
+		path := filepath.Join(config.ConfigDir.Path, "templates", template+".yaml")
 		input.UserEdit(path)
 		// TODO Validate is valid CronJob template
 	} else {
@@ -95,7 +92,7 @@ func EditTemplate(template string) error {
 // CreateTemplate opens a new template file for editing
 func CreateTemplate(template string) error {
 	if !IsTemplate(template) {
-		path := filepath.Join(configDir.Path, "templates", template+".yaml")
+		path := filepath.Join(config.ConfigDir.Path, "templates", template+".yaml")
 		input.UserEdit(path)
 		// TODO Validate is valid CronJob template
 	} else {
@@ -113,7 +110,7 @@ func DeleteTemplate(template string) error {
 		return errors.New("you cannot delete the default template")
 	}
 	if IsTemplate(template) {
-		path := filepath.Join(configDir.Path, "templates", template+".yaml")
+		path := filepath.Join(config.ConfigDir.Path, "templates", template+".yaml")
 		os.Remove(path)
 	} else {
 		fmt.Println(fmt.Sprintf("Template %s doesn't exist.", template))
@@ -125,7 +122,7 @@ func DeleteTemplate(template string) error {
 // GetTemplate opens a template and reads as a string
 func GetTemplate(template string) (string, error) {
 	if IsTemplate(template) {
-		path := filepath.Join(configDir.Path, "templates", template+".yaml")
+		path := filepath.Join(config.ConfigDir.Path, "templates", template+".yaml")
 		dat, err := ioutil.ReadFile(path)
 		if err != nil {
 			panic(err)
@@ -137,8 +134,5 @@ func GetTemplate(template string) (string, error) {
 }
 
 func init() {
-	configDirs := configdir.New("krontab", "krontab")
-	folders := configDirs.QueryFolders(configdir.Global)
-	configDir = folders[0]
-	configDir.WriteFile(filepath.Join("templates", "default.yaml"), []byte(defaultCronYaml))
+	config.ConfigDir.WriteFile(filepath.Join("templates", "default.yaml"), []byte(defaultCronYaml))
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"time"
 
+	"github.com/shibukawa/configdir"
 	"github.com/spf13/viper"
 )
 
@@ -28,6 +29,7 @@ type Provider interface {
 }
 
 var defaultConfig *viper.Viper
+var ConfigDir *configdir.Config
 
 func Config() Provider {
 	return defaultConfig
@@ -38,6 +40,9 @@ func LoadConfigProvider(appName string) Provider {
 }
 
 func init() {
+	configDirs := configdir.New("krontab", "krontab")
+	folders := configDirs.QueryFolders(configdir.Global)
+	ConfigDir = folders[0]
 	defaultConfig = readViperConfig("KRONTAB")
 }
 
@@ -47,10 +52,9 @@ func readViperConfig(appName string) *viper.Viper {
 	v.AutomaticEnv()
 
 	// global defaults
-	
+
 	v.SetDefault("json_logs", false)
 	v.SetDefault("loglevel", "debug")
-	
 
 	return v
 }
