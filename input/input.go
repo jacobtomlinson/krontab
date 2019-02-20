@@ -1,6 +1,7 @@
 package input
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -14,7 +15,7 @@ func check(e error) {
 }
 
 // UserInput get raw input from a user with a text editor and a temporary file
-func UserInput(in string) string {
+func UserInput(in string) (string, error) {
 	userInput := []byte(in)
 	tmpDir := os.TempDir()
 	tmpFile, tmpFileErr := ioutil.TempFile(tmpDir, "krontab_input_")
@@ -24,13 +25,18 @@ func UserInput(in string) string {
 	err := ioutil.WriteFile(tmpFile.Name(), userInput, 0644)
 	check(err)
 
-	return UserEdit(tmpFile.Name())
+	dat := UserEdit(tmpFile.Name())
+
+	if dat == in {
+		return "", errors.New("Input is unchanged")
+	}
+
+	return dat, nil
 }
 
 // UserEdit allow the user to edit a file
 func UserEdit(path string) string {
 	// TODO Check for EDITOR/VISUAL env var
-	// TODO Check whether the user actually made changes and error if not
 	editor := "vim"
 	editorPath, err := exec.LookPath(editor)
 	if err != nil {

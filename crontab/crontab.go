@@ -120,7 +120,11 @@ func EditCrontab() {
 
 `
 	// TODO Finish crontab edit blurb
-	rawKrontab := input.UserInput(crontabHeader + BuildCrontab())
+	rawKrontab, err := input.UserInput(crontabHeader + BuildCrontab())
+	if err != nil {
+		fmt.Println("Krontab was not changed. Exiting without applying.")
+		os.Exit(0)
+	}
 	jobs, err := ParseCrontab(rawKrontab)
 	for _, job := range jobs {
 		if job.Exists() {
