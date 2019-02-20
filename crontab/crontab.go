@@ -12,13 +12,14 @@ import (
 	"gopkg.in/yaml.v2"
 
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
-	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	batchv1beta1Types "k8s.io/client-go/kubernetes/typed/batch/v1beta1"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/jacobtomlinson/krontab/config"
 	"github.com/jacobtomlinson/krontab/input"
 	"github.com/jacobtomlinson/krontab/template"
 )
@@ -54,6 +55,10 @@ func (k KronJob) Create() error {
 		cronjob.Annotations = make(map[string]string)
 	}
 	cronjob.Annotations["krontabTemplate"] = k.Template
+	cronjob.Annotations["krontabManaged"] = "true"
+	if config.Config().IsSet("owner") {
+		cronjob.Annotations["krontabOwner"] = config.Config().GetString("owner")
+	}
 	_, err = cronjobsClient.Create(cronjob)
 	if err != nil {
 		panic(err.Error())
@@ -154,10 +159,18 @@ func ListCrontab() {
 
 // ListCronJobs gets a list of Kubernetes CronJob resources
 func ListCronJobs() []batchv1beta1.CronJob {
-	// TODO add annotation filter
 	cronjobs, err := clientset.BatchV1beta1().CronJobs(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		panic(err.Error())
+	}
+	if config.Config().IsSet("owner") {
+		var output []batchv1beta1.CronJob
+		for _, job := range cronjobs.Items {
+			if job.Annotations["krontabOwner"] == config.Config().GetString("owner") {
+				output = append(output, job)
+			}
+		}
+		return output
 	}
 	return cronjobs.Items
 }
@@ -219,6 +232,7 @@ func ParseCrontab(crontab string) ([]KronJob, error) {
 			// TODO Validate that the template exists
 			continue
 		}
+		// TODO Check for name conflicts
 		jobs = append(jobs, parseKronJob(line, template))
 	}
 	return jobs, nil
@@ -287,20 +301,22 @@ func homeDir() string {
 	return os.Getenv("USERPROFILE") // windows
 }
 
-func init() {
-	namespaceEnv, envSet := os.LookupEnv("KRONTAB_NAMESPACE")
-	if envSet {
-		namespace = namespaceEnv
-	} else {
-		namespace = apiv1.NamespaceDefault
+func getKubeConfig() (*rest.Config, error) {
+	config, err := rest.InClusterConfig()
+	if err == nil {
+		return config, nil
 	}
+	return config, nil
+}
+
+func init() {
+	namespace = config.Config().GetString("namespace")
 
 	if home := homeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	} else {
 		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	}
-	flag.Parse()
 
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)

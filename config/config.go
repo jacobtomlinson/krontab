@@ -29,12 +29,16 @@ type Provider interface {
 }
 
 var defaultConfig *viper.Viper
+
+// ConfigDir is the directory where config is stored
 var ConfigDir *configdir.Config
 
+// Config gets the default config
 func Config() Provider {
 	return defaultConfig
 }
 
+// LoadConfigProvider loads the config
 func LoadConfigProvider(appName string) Provider {
 	return readViperConfig(appName)
 }
@@ -48,13 +52,16 @@ func init() {
 
 func readViperConfig(appName string) *viper.Viper {
 	v := viper.New()
+	v.AddConfigPath(ConfigDir.Path)
 	v.SetEnvPrefix(appName)
 	v.AutomaticEnv()
 
 	// global defaults
-
 	v.SetDefault("json_logs", false)
 	v.SetDefault("loglevel", "debug")
+	v.SetDefault("namespace", "default")
+
+	v.ReadInConfig()
 
 	return v
 }

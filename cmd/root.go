@@ -50,7 +50,6 @@ func Execute() {
 func init() {
 	cobra.OnInitialize()
 
-	// TODO Flags are not working
 	rootCmd.Flags().BoolVarP(&editCrontab, "edit-crontab", "e", false, "Edit the crontab")
 	rootCmd.Flags().BoolVarP(&listCrontab, "list-crontab", "l", false, "List the crontab")
 }
