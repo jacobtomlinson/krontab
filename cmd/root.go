@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 
 You can use it to create cron jobs on a kubernetes cluster in a familiar crontab format.
 Krontab works by allowing you to create job templates which are used in kubernetes. Then create
-specific cron jobs using the crontab. Example:
+specific cron jobs using the crontab. Example krontab:
 
 # Crontab example
 
