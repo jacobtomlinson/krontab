@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -22,7 +23,7 @@ var getTemplaceCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		tmpl, _ := template.GetTemplate(args[0])
-		fmt.Println(tmpl)
+		fmt.Println(strings.TrimSpace(tmpl))
 	},
 }
 

@@ -36,8 +36,13 @@ func UserInput(in string) (string, error) {
 
 // UserEdit allow the user to edit a file
 func UserEdit(path string) string {
-	// TODO Check for EDITOR/VISUAL env var
 	editor := "vim"
+	if value, ok := os.LookupEnv("EDITOR"); ok {
+		editor = value
+	}
+	if value, ok := os.LookupEnv("VISUAL"); ok {
+		editor = value
+	}
 	editorPath, err := exec.LookPath(editor)
 	if err != nil {
 		fmt.Printf("Error %s while looking up for %s!!", editorPath, editor)
