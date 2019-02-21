@@ -2,10 +2,8 @@ package crontab
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	uuid "github.com/satori/go.uuid"
@@ -99,7 +97,11 @@ func (k KronJob) Create() error {
 // Exists checks whether a job exists on the cluster
 func (k KronJob) Exists() bool {
 	exists := false
-	for _, existingJob := range ListKronJobs() {
+	jobs, err := ListKronJobs()
+	if err != nil {
+		panic(err)
+	}
+	for _, existingJob := range jobs {
 		if k.Name == existingJob.Name {
 			exists = true
 		}
@@ -148,7 +150,11 @@ func (k KronJob) Update() error {
 
 // EditCrontab generates the current crontab, allows the user to edit and then applies the changes
 func EditCrontab() {
-	rawKrontab, err := input.UserInput(crontabHeader + BuildCrontab())
+	crontab, err := BuildCrontab()
+	if err != nil {
+		panic(err)
+	}
+	rawKrontab, err := input.UserInput(crontabHeader + crontab)
 	if err != nil {
 		fmt.Println("Krontab was not changed. Exiting without applying.")
 		os.Exit(0)
@@ -171,7 +177,10 @@ func EditCrontab() {
 			}
 		}
 	}
-	existingJobs := ListKronJobs()
+	existingJobs, err := ListKronJobs()
+	if err != nil {
+		panic(err)
+	}
 	for _, existingJob := range existingJobs {
 		found := false
 		for _, job := range jobs {
@@ -187,15 +196,24 @@ func EditCrontab() {
 
 // ListCrontab generates the current crontab and shows it to the user
 func ListCrontab() {
+	crontab, err := BuildCrontab()
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf(crontabHeader)
-	fmt.Println(BuildCrontab())
+	fmt.Println(crontab)
 }
 
 // ListCronJobs gets a list of Kubernetes CronJob resources
-func ListCronJobs() []batchv1beta1.CronJob {
+func ListCronJobs() ([]batchv1beta1.CronJob, error) {
 	cronjobs, err := clientset.BatchV1beta1().CronJobs(namespace).List(metav1.ListOptions{})
 	if err != nil {
-		panic(err.Error())
+		if strings.Contains(err.Error(), "cronjobs.batch is forbidden") {
+			fmt.Println(err.Error())
+			fmt.Println("You do not have permission to list CronJobs.")
+			os.Exit(1)
+		}
+		panic(err)
 	}
 	if config.Config().IsSet("owner") {
 		var output []batchv1beta1.CronJob
@@ -204,15 +222,18 @@ func ListCronJobs() []batchv1beta1.CronJob {
 				output = append(output, job)
 			}
 		}
-		return output
+		return output, nil
 	}
-	return cronjobs.Items
+	return cronjobs.Items, nil
 }
 
 // ListKronJobs gets a list of Kubernetes CronJob resources in KronJob format
-func ListKronJobs() []KronJob {
+func ListKronJobs() ([]KronJob, error) {
 	var jobs []KronJob
-	cronjobs := ListCronJobs()
+	cronjobs, err := ListCronJobs()
+	if err != nil {
+		return nil, err
+	}
 
 	for _, job := range cronjobs {
 		jobs = append(jobs, KronJob{
@@ -223,13 +244,16 @@ func ListKronJobs() []KronJob {
 		})
 	}
 
-	return jobs
+	return jobs, nil
 }
 
 // BuildCrontab constructs a string representation of Kubernetes CronJob resources in a crontab format
-func BuildCrontab() string {
+func BuildCrontab() (string, error) {
 	var output []string
-	cronjobs := ListKronJobs()
+	cronjobs, err := ListKronJobs()
+	if err != nil {
+		panic(err)
+	}
 
 	var jobTemplateGroups map[string][]KronJob
 	jobTemplateGroups = make(map[string][]KronJob)
@@ -244,7 +268,7 @@ func BuildCrontab() string {
 			output = append(output, fmt.Sprintf("%s %s  # name: %s", job.Timing, job.Command, job.Name))
 		}
 	}
-	return strings.Join(output, "\n")
+	return strings.Join(output, "\n"), nil
 }
 
 // ParseCrontab reads the crontab and parses it into jobs
@@ -344,16 +368,13 @@ func getKubeConfig() (*rest.Config, error) {
 }
 
 func init() {
+	// TODO Add support for incluster config (#1)
 	namespace = config.Config().GetString("namespace")
 
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	configOverrides := &clientcmd.ConfigOverrides{}
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+	config, err := kubeConfig.ClientConfig()
 	if err != nil {
 		panic(err.Error())
 	}
