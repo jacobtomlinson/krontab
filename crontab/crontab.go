@@ -377,12 +377,20 @@ func getKubeConfig() (*rest.Config, error) {
 }
 
 func init() {
-	// TODO Add support for incluster config (#1)
-	namespace = config.Config().GetString("namespace")
-
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	configOverrides := &clientcmd.ConfigOverrides{}
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+
+	if config.Config().IsSet("namespace") {
+		namespace = config.Config().GetString("namespace")
+	} else {
+		configNamespace, _, err := kubeConfig.Namespace()
+		if err != nil {
+			panic(err)
+		}
+		namespace = configNamespace
+	}
+
 	config, err := kubeConfig.ClientConfig()
 	if err != nil {
 		panic(err.Error())

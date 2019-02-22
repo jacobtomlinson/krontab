@@ -59,7 +59,6 @@ func readViperConfig(appName string) *viper.Viper {
 	// global defaults
 	v.SetDefault("json_logs", false)
 	v.SetDefault("loglevel", "debug")
-	v.SetDefault("namespace", "default")
 
 	v.ReadInConfig()
 
