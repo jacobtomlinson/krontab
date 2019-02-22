@@ -1,6 +1,7 @@
 package config
 
 import (
+	"path/filepath"
 	"time"
 
 	"github.com/shibukawa/configdir"
@@ -33,6 +34,12 @@ var defaultConfig *viper.Viper
 // ConfigDir is the directory where config is stored
 var ConfigDir *configdir.Config
 
+// SystemConfigDir is the directory where system config is stored
+var SystemConfigDir *configdir.Config
+
+// TemplateDirs are the directorys to check for templates
+var TemplateDirs []string
+
 // Config gets the default config
 func Config() Provider {
 	return defaultConfig
@@ -45,8 +52,11 @@ func LoadConfigProvider(appName string) Provider {
 
 func init() {
 	configDirs := configdir.New("krontab", "krontab")
-	folders := configDirs.QueryFolders(configdir.Global)
-	ConfigDir = folders[0]
+	ConfigDir = configDirs.QueryFolders(configdir.Global)[0]
+	SystemConfigDir = configDirs.QueryFolders(configdir.System)[0]
+	TemplateDirs = append(TemplateDirs, filepath.Join(ConfigDir.Path, "templates"))
+	TemplateDirs = append(TemplateDirs, filepath.Join(SystemConfigDir.Path, "templates"))
+
 	defaultConfig = readViperConfig("KRONTAB")
 }
 
