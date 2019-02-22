@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/a8m/envsubst"
 	uuid "github.com/satori/go.uuid"
 	"gopkg.in/yaml.v2"
 
@@ -85,7 +86,11 @@ func (k KronJob) Create() error {
 	cronjob.Annotations["krontabTemplate"] = k.Template
 	cronjob.Annotations["krontabManaged"] = "true"
 	if config.Config().IsSet("owner") {
-		cronjob.Annotations["krontabOwner"] = config.Config().GetString("owner")
+		owner, err := envsubst.String(config.Config().GetString("owner"))
+		if err != nil {
+			panic(err.Error())
+		}
+		cronjob.Annotations["krontabOwner"] = owner
 	}
 	_, err = cronjobsClient.Create(cronjob)
 	if err != nil {
@@ -218,7 +223,11 @@ func ListCronJobs() ([]batchv1beta1.CronJob, error) {
 	if config.Config().IsSet("owner") {
 		var output []batchv1beta1.CronJob
 		for _, job := range cronjobs.Items {
-			if job.Annotations["krontabOwner"] == config.Config().GetString("owner") {
+			owner, err := envsubst.String(config.Config().GetString("owner"))
+			if err != nil {
+				panic(err.Error())
+			}
+			if job.Annotations["krontabOwner"] == owner {
 				output = append(output, job)
 			}
 		}
@@ -284,7 +293,7 @@ func ParseCrontab(crontab string) ([]KronJob, error) {
 		}
 		if isComment(line) {
 			parsedTemplate, err := parseTemplateYaml(uncomment(line))
-			if err == nil {
+			if err == nil && parsedTemplate != "" {
 				jobTemplate = parsedTemplate
 			}
 			// TODO Check template exists
