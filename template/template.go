@@ -50,18 +50,28 @@ func contains(s []string, e string) bool {
 	return false
 }
 
+func listTemplatesForDir(path string) ([]string, error) {
+	var templates []string
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		files, err := ioutil.ReadDir(path)
+		if err != nil {
+			panic(err)
+		}
+		for _, f := range files {
+			templates = append(templates, strings.Replace(f.Name(), ".yaml", "", 1))
+		}
+	}
+	return templates, nil
+}
+
 // ListTemplates gives a list of the current cron templates
 func ListTemplates() []string {
-	files, err := ioutil.ReadDir(filepath.Join(config.ConfigDir.Path, "templates"))
-	if err != nil {
-		panic(err)
-	}
-
 	var templates []string
 
-	for _, f := range files {
-		templates = append(templates, strings.Replace(f.Name(), ".yaml", "", 1))
-	}
+	userTemplates, _ := listTemplatesForDir(config.TemplateDirs[0])
+	systemTemplates, _ := listTemplatesForDir(config.TemplateDirs[1])
+	templates = append(userTemplates, systemTemplates...)
+
 	return templates
 }
 
@@ -79,7 +89,10 @@ func EditTemplate(template string) error {
 		return errors.New("you cannot edit the default template")
 	}
 	if IsTemplate(template) {
-		path := filepath.Join(config.ConfigDir.Path, "templates", template+".yaml")
+		path := filepath.Join(config.TemplateDirs[0], template+".yaml")
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			path = filepath.Join(config.TemplateDirs[1], template+".yaml")
+		}
 		input.UserEdit(path)
 		// TODO Validate is valid CronJob template
 	} else {
@@ -92,7 +105,7 @@ func EditTemplate(template string) error {
 // CreateTemplate opens a new template file for editing
 func CreateTemplate(template string) error {
 	if !IsTemplate(template) {
-		path := filepath.Join(config.ConfigDir.Path, "templates", template+".yaml")
+		path := filepath.Join(config.TemplateDirs[0], template+".yaml")
 		input.UserEdit(path)
 		// TODO Validate is valid CronJob template
 	} else {
@@ -110,7 +123,10 @@ func DeleteTemplate(template string) error {
 		return errors.New("you cannot delete the default template")
 	}
 	if IsTemplate(template) {
-		path := filepath.Join(config.ConfigDir.Path, "templates", template+".yaml")
+		path := filepath.Join(config.TemplateDirs[0], template+".yaml")
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			path = filepath.Join(config.TemplateDirs[1], template+".yaml")
+		}
 		os.Remove(path)
 	} else {
 		fmt.Println(fmt.Sprintf("Template %s doesn't exist.", template))
@@ -122,7 +138,7 @@ func DeleteTemplate(template string) error {
 // GetTemplate opens a template and reads as a string
 func GetTemplate(template string) (string, error) {
 	if IsTemplate(template) {
-		path := filepath.Join(config.ConfigDir.Path, "templates", template+".yaml")
+		path := filepath.Join(config.TemplateDirs[0], template+".yaml")
 		dat, err := ioutil.ReadFile(path)
 		if err != nil {
 			panic(err)
