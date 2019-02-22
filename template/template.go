@@ -127,7 +127,11 @@ func DeleteTemplate(template string) error {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			path = filepath.Join(config.TemplateDirs[1], template+".yaml")
 		}
-		os.Remove(path)
+		err := os.Remove(path)
+		if err != nil {
+			fmt.Println("Deleting template failed.")
+			fmt.Println(err)
+		}
 	} else {
 		fmt.Println(fmt.Sprintf("Template %s doesn't exist.", template))
 		return errors.New("template doesn't exist")

@@ -24,7 +24,6 @@ import (
 )
 
 var namespace string
-var kubeconfig *string
 var clientset *kubernetes.Clientset
 var cronjobsClient batchv1beta1Types.CronJobInterface
 var crontabHeader = `# Welcome to krontab, a crontab like editor for Kubernetes cron jobs.
@@ -386,7 +385,8 @@ func init() {
 	} else {
 		configNamespace, _, err := kubeConfig.Namespace()
 		if err != nil {
-			panic(err)
+			fmt.Println("Failed to load kubernetes config.")
+			os.Exit(1)
 		}
 		namespace = configNamespace
 	}
