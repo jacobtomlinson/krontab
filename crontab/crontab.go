@@ -4,16 +4,20 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/a8m/envsubst"
 	uuid "github.com/satori/go.uuid"
 	"gopkg.in/yaml.v2"
 
+	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+	batchv1Types "k8s.io/client-go/kubernetes/typed/batch/v1"
 	batchv1beta1Types "k8s.io/client-go/kubernetes/typed/batch/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -26,6 +30,7 @@ import (
 var namespace string
 var clientset *kubernetes.Clientset
 var cronjobsClient batchv1beta1Types.CronJobInterface
+var jobsClient batchv1Types.JobInterface
 var crontabHeader = `# Welcome to krontab, a crontab like editor for Kubernetes cron jobs.
 #
 # This is a virtual file and was generated from the kubernetes API. Any edits you make here will be
@@ -67,6 +72,16 @@ type KronJob struct {
 
 // Create a new cronjob on the cluster
 func (k KronJob) Create() error {
+	cronjob, _ := k.Construct()
+	_, err := cronjobsClient.Create(cronjob)
+	if err != nil {
+		panic(err.Error())
+	}
+	return err
+}
+
+// Construct a CronJob resource from the KronJob
+func (k KronJob) Construct() (*batchv1beta1.CronJob, error) {
 	templateYaml, err := template.GetTemplate(k.Template)
 	decode := scheme.Codecs.UniversalDeserializer().Decode
 	obj, _, err := decode([]byte(templateYaml), nil, nil)
@@ -91,11 +106,25 @@ func (k KronJob) Create() error {
 		}
 		cronjob.Annotations["krontabOwner"] = owner
 	}
-	_, err = cronjobsClient.Create(cronjob)
-	if err != nil {
-		panic(err.Error())
+	return cronjob, nil
+}
+
+// Run the job as a one off
+func (k KronJob) Run() (string, error) {
+	cronjob, _ := k.Construct()
+	suffix := "-" + strconv.Itoa(int(time.Now().Unix()))
+	job := &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: k.Name + suffix,
+		},
+		Spec: cronjob.Spec.JobTemplate.Spec,
 	}
-	return err
+
+	result, err := jobsClient.Create(job)
+	if err != nil {
+		panic(err)
+	}
+	return result.GetObjectMeta().GetName(), nil
 }
 
 // Exists checks whether a job exists on the cluster
@@ -304,6 +333,33 @@ func ParseCrontab(crontab string) ([]KronJob, error) {
 	return jobs, nil
 }
 
+// RunCronJob creates a new job for an existing cron job
+func RunCronJob(jobName string) (string, error) {
+	kronjobs, _ := ListKronJobs()
+	for _, kronjob := range kronjobs {
+		if kronjob.Name == jobName {
+			result, _ := kronjob.Run()
+			fmt.Printf("Created job %q.\n", result)
+			return result, nil
+		}
+	}
+	fmt.Printf("No such job %s\n", jobName)
+	return "", fmt.Errorf("no such job %s", jobName)
+}
+
+// RunJob creates and runs a new job
+func RunJob(command []string, template string) (string, error) {
+	jobName := "one-shot"
+	kronjob := KronJob{
+		template,
+		jobName,
+		"0 0 1 1 *",
+		strings.TrimSpace(strings.Join(command, " ")),
+	}
+	response, err := kronjob.Run()
+	return response, err
+}
+
 func isBlankLine(line string) bool {
 	line = strings.TrimSpace(line)
 	return len(line) <= 0
@@ -403,4 +459,5 @@ func init() {
 	}
 	clientset = newClientset
 	cronjobsClient = clientset.BatchV1beta1().CronJobs(namespace)
+	jobsClient = clientset.BatchV1().Jobs(namespace)
 }
