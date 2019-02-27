@@ -58,7 +58,9 @@ func listTemplatesForDir(path string) ([]string, error) {
 			panic(err)
 		}
 		for _, f := range files {
-			templates = append(templates, strings.Replace(f.Name(), ".yaml", "", 1))
+			if strings.Contains(f.Name(), ".yaml") {
+				templates = append(templates, strings.Replace(f.Name(), ".yaml", "", 1))
+			}
 		}
 	}
 	return templates, nil
