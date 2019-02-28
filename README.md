@@ -3,13 +3,15 @@
 [![Build Status](https://travis-ci.com/jacobtomlinson/krontab.svg?branch=master)](https://travis-ci.com/jacobtomlinson/krontab)
 [![Current Release](https://img.shields.io/github/release/jacobtomlinson/krontab.svg)](https://github.com/jacobtomlinson/krontab/releases/latest)
 
-A crontab replacement for kubernetes.
+A crontab replacement for Kubernetes.
 
-You can use it to create cron jobs on a kubernetes cluster in a familiar crontab format.
-Krontab works by allowing you to create job templates which are used in kubernetes. Then create
-specific cron jobs using the crontab. Example:
+Create `CronJob` resources on your Kubernetes cluster in the same way you would on your *nix system.
+Krontab works by constructing a virtual crontab file from your CronJob resources and communicating changes back to the Kubernetes API. You can create more complex and customised jobs with custom templates and trigger your jobs manually any time from the command line. 
 
-```
+Example crontab:
+
+```shell
+$ krontab -l
 # template: default
 0 1 * * * echo hello  # name: test
 ```
@@ -45,7 +47,7 @@ chmod +x /usr/local/bin/krontab
 
 ## Configuration
 
-Krontab is configured with environment variables.
+Authentication with your Kubernetes cluster will use your `~/.kube/config` credentials or a service account if being used from inside a pod on the cluster. Advanced configuration options are specified with environment variables.
 
 | Env var  | Default | Description |
 | ------------- | ------------- | ------------- |
