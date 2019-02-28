@@ -16,21 +16,30 @@ specific cron jobs using the crontab. Example:
 
 ## Installation
 
+### Quick install
+
+```shell
+curl -sL https://git.io/krontab | bash
+```
+
 ### Linux (x86 64-bit)
 ```shell
-curl -L https://github.com/jacobtomlinson/krontab/releases/download/{LATEST VERSION}/krontab-linux-x86_64 -o /usr/local/bin/krontab
+LATEST_VERSION=$(curl -sL -o /dev/null -w %{url_effective} "https://github.com/jacobtomlinson/krontab/releases/latest" | rev | cut -f1 -d'/'| rev)
+curl -L https://github.com/jacobtomlinson/krontab/releases/download/${LATEST_VERSION}/krontab-linux-x86_64 -o /usr/local/bin/krontab
 chmod +x /usr/local/bin/krontab
 ```
 
 ### Linux (arm 32-bit)
 ```shell
-curl -L https://github.com/jacobtomlinson/krontab/releases/download/{LATEST VERSION}/krontab-linux-arm -o /usr/local/bin/krontab
+LATEST_VERSION=$(curl -sL -o /dev/null -w %{url_effective} "https://github.com/jacobtomlinson/krontab/releases/latest" | rev | cut -f1 -d'/'| rev)
+curl -L https://github.com/jacobtomlinson/krontab/releases/download/${LATEST_VERSION}/krontab-linux-arm -o /usr/local/bin/krontab
 chmod +x /usr/local/bin/krontab
 ```
 
 ### OS X (64-bit)
 ```shell
-curl -L https://github.com/jacobtomlinson/krontab/releases/download/{LATEST VERSION}/krontab-darwin-x86_64 -o /usr/local/bin/krontab
+LATEST_VERSION=$(curl -sL -o /dev/null -w %{url_effective} "https://github.com/jacobtomlinson/krontab/releases/latest" | rev | cut -f1 -d'/'| rev)
+curl -L https://github.com/jacobtomlinson/krontab/releases/download/${LATEST_VERSION}/krontab-darwin-x86_64 -o /usr/local/bin/krontab
 chmod +x /usr/local/bin/krontab
 ```
 
