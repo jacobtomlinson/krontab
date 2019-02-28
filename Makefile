@@ -2,7 +2,7 @@
 
 BIN_NAME=krontab
 
-VERSION := $(shell grep "const Version " version/version.go | sed -E 's/.*"(.+)"$$/\1/')
+VERSION := $(shell git describe --tags --dirty)
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 BUILD_DATE=$(shell date '+%Y-%m-%d-%H:%M:%S')
@@ -27,7 +27,7 @@ help:
 build:
 	@echo "building ${BIN_NAME} ${VERSION}"
 	@echo "GOPATH=${GOPATH}"
-	go build -ldflags "-X github.com/jacobtomlinson/krontab/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/jacobtomlinson/krontab/version.BuildDate=${BUILD_DATE}" -o bin/${BIN_NAME}
+	go build -ldflags "-X github.com/jacobtomlinson/krontab/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/jacobtomlinson/krontab/version.BuildDate=${BUILD_DATE} -X github.com/jacobtomlinson/krontab/version.Version=${VERSION}" -o bin/${BIN_NAME}
 
 build-linux-amd64:
 	@echo "building ${BIN_NAME} ${VERSION} - linux amd64"
