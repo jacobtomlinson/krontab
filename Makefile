@@ -18,7 +18,8 @@ help:
 	@echo '    make build           Compile the project.'
 	@echo '    make build-all       Compile the project for all supported architectures with goreleaser.'
 	@echo '    make test            Run tests on a compiled project.'
-	@echo '    make release         Perform a release of the current tag with goreleaser.'
+	@echo '    make deploy          Perform a deployment of the current tag with goreleaser.'
+	@echo '    make release         Create a git tag and push to GitHub.'
 	@echo '    make clean           Clean the directory tree.'
 	@echo
 
@@ -38,8 +39,13 @@ export KRONTAB_VERSION
 export GIT_COMMIT
 export GIT_DIRTY
 export BUILD_DATE
-release:
+deploy:
 	curl -sL https://git.io/goreleaser | bash
+
+release:
+	@read -p "Enter tag [v{major}.{minor}.{patch}]: " tag; \
+	echo Tagging $$tag \
+	git checkout master && git pull origin master --tags && git tag -a $$tag -m "$$tag" && git push origin $$tag
 
 clean:
 	@test ! -e bin/${BIN_NAME} || rm bin/${BIN_NAME}
