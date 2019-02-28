@@ -13,8 +13,8 @@ var jobTemplate string
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "Run a krontab resource",
-	Long:  `Run a krontab resource`,
+	Short: "Run a krontab job",
+	Long:  `Run a krontab job`,
 }
 
 var runJobCmd = &cobra.Command{

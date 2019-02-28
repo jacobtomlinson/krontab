@@ -1,17 +1,18 @@
 package cmd
 
 import (
-        "github.com/spf13/cobra"
-		"fmt"
+	"fmt"
 
-		"github.com/jacobtomlinson/krontab/template"
-		"github.com/jacobtomlinson/krontab/crontab"
+	"github.com/spf13/cobra"
+
+	"github.com/jacobtomlinson/krontab/crontab"
+	"github.com/jacobtomlinson/krontab/template"
 )
 
 var listCmd = &cobra.Command{
-        Use:   "list",
-        Short: "List krontab resources",
-        Long:  `List krontab resources`,
+	Use:   "list",
+	Short: "List krontab resources",
+	Long:  `List krontab resources`,
 }
 
 var listTemplaceCmd = &cobra.Command{
@@ -34,7 +35,24 @@ var listCrontabCmd = &cobra.Command{
 	},
 }
 
+var listRunningCmd = &cobra.Command{
+	Use:   "running",
+	Short: "list the running jobs",
+	Long:  `list the running jobs`,
+	Run: func(cmd *cobra.Command, args []string) {
+		jobs, _ := crontab.ListRunning()
+		if len(jobs) > 0 {
+			for _, job := range jobs {
+				fmt.Println(job)
+			}
+		} else {
+			fmt.Println("No running jobs.")
+		}
+	},
+}
+
 func init() {
+	listCmd.AddCommand(listRunningCmd)
 	listCmd.AddCommand(listTemplaceCmd)
 	listCmd.AddCommand(listCrontabCmd)
 	rootCmd.AddCommand(listCmd)

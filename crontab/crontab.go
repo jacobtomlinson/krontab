@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/a8m/envsubst"
+	"github.com/dustin/go-humanize"
 	uuid "github.com/satori/go.uuid"
 	"gopkg.in/yaml.v2"
 
@@ -93,7 +94,7 @@ func (k KronJob) Construct() (*batchv1beta1.CronJob, error) {
 	cronjob.Name = k.Name
 	cronjob.Spec.Schedule = k.Timing
 	cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Name = k.Name
-	cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Command = strings.Split(k.Command, " ")
+	cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Command = strings.Split(strings.TrimSpace(k.Command), " ")
 	if cronjob.Annotations == nil {
 		cronjob.Annotations = make(map[string]string)
 	}
@@ -118,6 +119,19 @@ func (k KronJob) Run() (string, error) {
 			Name: k.Name + suffix,
 		},
 		Spec: cronjob.Spec.JobTemplate.Spec,
+	}
+	if job.Annotations == nil {
+		job.Annotations = make(map[string]string)
+	}
+	job.Annotations["krontabOneShot"] = "true"
+	job.Annotations["krontabTemplate"] = k.Template
+	job.Annotations["krontabManaged"] = "true"
+	if config.Config().IsSet("owner") {
+		owner, err := envsubst.String(config.Config().GetString("owner"))
+		if err != nil {
+			panic(err.Error())
+		}
+		job.Annotations["krontabOwner"] = owner
 	}
 
 	result, err := jobsClient.Create(job)
@@ -282,6 +296,50 @@ func ListKronJobs() ([]KronJob, error) {
 	}
 
 	return jobs, nil
+}
+
+// ListRunning gets a list of the current running jobs
+func ListRunning() ([]string, error) {
+	var response []string
+	var owner string
+	var shouldAppend bool
+	kronjobs, _ := ListKronJobs()
+	jobs, _ := clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{})
+	if config.Config().IsSet("owner") {
+		var err error
+		owner, err = envsubst.String(config.Config().GetString("owner"))
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	for _, job := range jobs.Items {
+		shouldAppend = false
+		if job.Annotations["krontabOneShot"] == "true" {
+			if owner != "" && job.Annotations["krontabOwner"] != owner {
+				continue
+			}
+			shouldAppend = true
+		}
+		for _, kronjob := range kronjobs {
+			if strings.HasPrefix(job.Name, kronjob.Name) {
+				shouldAppend = true
+			}
+		}
+		if shouldAppend {
+			var status string
+			if job.Status.Active > 0 {
+				status = "Running"
+			} else if job.Status.Succeeded > 0 {
+				status = "Completed"
+			} else if job.Status.Failed > 0 {
+				status = "Failed"
+			} else {
+				status = "Unknown"
+			}
+			response = append(response, fmt.Sprintf("%s\t\t%s\t\tstarted %s", job.Name, status, humanize.Time(job.Status.StartTime.Time)))
+		}
+	}
+	return response, nil
 }
 
 // BuildCrontab constructs a string representation of Kubernetes CronJob resources in a crontab format
