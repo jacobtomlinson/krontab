@@ -96,6 +96,7 @@ func EditTemplate(template string) error {
 			templatePath := filepath.Join(templateDir, template+".yaml")
 			if _, err := os.Stat(templatePath); err == nil {
 				path = templatePath
+				break
 			}
 		}
 		if path == "" {
@@ -136,6 +137,7 @@ func DeleteTemplate(template string) error {
 			templatePath := filepath.Join(templateDir, template+".yaml")
 			if _, err := os.Stat(templatePath); err == nil {
 				path = templatePath
+				break
 			}
 		}
 		if path == "" {
@@ -161,6 +163,7 @@ func GetTemplate(template string) (string, error) {
 			templatePath := filepath.Join(templateDir, template+".yaml")
 			if _, err := os.Stat(templatePath); err == nil {
 				path = templatePath
+				break
 			}
 		}
 		if path == "" {
