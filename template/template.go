@@ -91,9 +91,16 @@ func EditTemplate(template string) error {
 		return errors.New("you cannot edit the default template")
 	}
 	if IsTemplate(template) {
-		path := filepath.Join(config.TemplateDirs[0], template+".yaml")
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			path = filepath.Join(config.TemplateDirs[1], template+".yaml")
+		var path string
+		for _, templateDir := range config.TemplateDirs {
+			templatePath := filepath.Join(templateDir, template+".yaml")
+			if _, err := os.Stat(templatePath); err == nil {
+				path = templatePath
+				break
+			}
+		}
+		if path == "" {
+			panic(fmt.Errorf("Cannot find template %s", template))
 		}
 		input.UserEdit(path)
 		// TODO Validate is valid CronJob template
@@ -125,9 +132,16 @@ func DeleteTemplate(template string) error {
 		return errors.New("you cannot delete the default template")
 	}
 	if IsTemplate(template) {
-		path := filepath.Join(config.TemplateDirs[0], template+".yaml")
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			path = filepath.Join(config.TemplateDirs[1], template+".yaml")
+		var path string
+		for _, templateDir := range config.TemplateDirs {
+			templatePath := filepath.Join(templateDir, template+".yaml")
+			if _, err := os.Stat(templatePath); err == nil {
+				path = templatePath
+				break
+			}
+		}
+		if path == "" {
+			panic(fmt.Errorf("Cannot find template %s", template))
 		}
 		err := os.Remove(path)
 		if err != nil {
@@ -144,7 +158,17 @@ func DeleteTemplate(template string) error {
 // GetTemplate opens a template and reads as a string
 func GetTemplate(template string) (string, error) {
 	if IsTemplate(template) {
-		path := filepath.Join(config.TemplateDirs[0], template+".yaml")
+		var path string
+		for _, templateDir := range config.TemplateDirs {
+			templatePath := filepath.Join(templateDir, template+".yaml")
+			if _, err := os.Stat(templatePath); err == nil {
+				path = templatePath
+				break
+			}
+		}
+		if path == "" {
+			panic(fmt.Errorf("Cannot find template %s", template))
+		}
 		dat, err := ioutil.ReadFile(path)
 		if err != nil {
 			panic(err)
