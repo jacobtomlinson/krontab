@@ -2,12 +2,12 @@
 
 BIN_NAME=krontab
 
-VERSION := $(shell git describe --tags --dirty)
+KRONTAB_VERSION := $(shell git describe --tags --dirty)
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 BUILD_DATE=$(shell date '+%Y-%m-%d-%H:%M:%S')
 IMAGE_NAME := "jacobtomlinson/krontab"
-BUILD_FLAGS="-X github.com/jacobtomlinson/krontab/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/jacobtomlinson/krontab/version.BuildDate=${BUILD_DATE} -X github.com/jacobtomlinson/krontab/version.Version=${VERSION}"
+BUILD_FLAGS="-X github.com/jacobtomlinson/krontab/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X github.com/jacobtomlinson/krontab/version.BuildDate=${BUILD_DATE} -X github.com/jacobtomlinson/krontab/version.Version=${KRONTAB_VERSION}"
 
 default: help
 
@@ -16,8 +16,9 @@ help:
 	@echo
 	@echo 'Usage:'
 	@echo '    make build           Compile the project.'
-	@echo '    make build-all       Compile the project for all supported architectures.'
+	@echo '    make build-all       Compile the project for all supported architectures with goreleaser.'
 	@echo '    make test            Run tests on a compiled project.'
+	@echo '    make release         Perform a release of the current tag with goreleaser.'
 	@echo '    make clean           Clean the directory tree.'
 	@echo
 
@@ -26,22 +27,19 @@ build:
 	@echo "GOPATH=${GOPATH}"
 	go build -ldflags ${BUILD_FLAGS} -o bin/${BIN_NAME}
 
-build-linux-amd64:
-	@echo "building ${BIN_NAME} ${VERSION} - linux amd64"
-	@echo "GOPATH=${GOPATH}"
-	GOOS=linux GOARCH=amd64 go build -ldflags ${BUILD_FLAGS} -o bin/${BIN_NAME}-linux-amd64
+export KRONTAB_VERSION
+export GIT_COMMIT
+export GIT_DIRTY
+export BUILD_DATE
+build-all:
+	curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
 
-build-linux-arm:
-	@echo "building ${BIN_NAME} ${VERSION} - linux arm"
-	@echo "GOPATH=${GOPATH}"
-	GOOS=linux GOARCH=arm go build -ldflags ${BUILD_FLAGS} -o bin/${BIN_NAME}-linux-arm
-
-build-darwin-amd64:
-	@echo "building ${BIN_NAME} ${VERSION} - darwin arm"
-	@echo "GOPATH=${GOPATH}"
-	GOOS=darwin GOARCH=amd64 go build -ldflags ${BUILD_FLAGS} -o bin/${BIN_NAME}-darwin-amd64
-
-build-all: build-linux-amd64 build-linux-arm build-darwin-amd64
+export KRONTAB_VERSION
+export GIT_COMMIT
+export GIT_DIRTY
+export BUILD_DATE
+release:
+	curl -sL https://git.io/goreleaser | bash
 
 clean:
 	@test ! -e bin/${BIN_NAME} || rm bin/${BIN_NAME}
