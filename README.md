@@ -18,7 +18,7 @@ specific cron jobs using the crontab. Example:
 
 ### Linux (x86 64-bit)
 ```shell
-curl -L https://github.com/jacobtomlinson/krontab/releases/download/{LATEST VERSION}/krontab-linux-amd64 -o /usr/local/bin/krontab
+curl -L https://github.com/jacobtomlinson/krontab/releases/download/{LATEST VERSION}/krontab-linux-x86_64 -o /usr/local/bin/krontab
 chmod +x /usr/local/bin/krontab
 ```
 
@@ -30,7 +30,7 @@ chmod +x /usr/local/bin/krontab
 
 ### OS X (64-bit)
 ```shell
-curl -L https://github.com/jacobtomlinson/krontab/releases/download/{LATEST VERSION}/krontab-darwin-amd64 -o /usr/local/bin/krontab
+curl -L https://github.com/jacobtomlinson/krontab/releases/download/{LATEST VERSION}/krontab-darwin-x86_64 -o /usr/local/bin/krontab
 chmod +x /usr/local/bin/krontab
 ```
 
