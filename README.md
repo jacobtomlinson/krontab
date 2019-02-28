@@ -69,6 +69,7 @@ Available Commands:
   get         Get krontab resources
   help        Help about any command
   list        List krontab resources
+  run         Run a krontab job
   version     Print the version number of krontab
 
 Flags:
