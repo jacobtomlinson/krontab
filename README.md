@@ -6,7 +6,7 @@
 A crontab replacement for Kubernetes.
 
 Create `CronJob` resources on your Kubernetes cluster in the same way you would on your *nix system.
-Krontab works by constructing a virtual crontab file from your CronJob resources and communicating changes back to the Kubernetes API. You can create more complex and customised jobs with custom templates and trigger your jobs manually any time from the command line. 
+Krontab works by constructing a virtual crontab file from your CronJob resources and communicating changes back to the Kubernetes API. You can create more complex and customised jobs with custom templates and trigger your jobs manually any time from the command line.
 
 Example crontab:
 
@@ -167,6 +167,108 @@ $ krontab -e
 
 # template: default
 0 1 * * * echo hello world  # name: test
+```
+
+## Examples
+
+### Create a new cron job
+
+To create a new cron job file you need to open your krontab file for editing. This will automatically open in `vim` or
+whatever text edit you have configured with `VISUAL` or `EDITOR`.
+
+```
+krontab -e
+```
+
+Once this file is open you can create a new job in the same way you would when using regular `crontab`. You must specify your timings as
+a five column cron time (minute, hour, day of month, month of year, day of week) followed by your shell command. This command will be triggered
+every time the current time matches the schedule you have specified.
+
+Let's create a job which echo's "hello` every hour.
+
+```
+0 * * * * echo hello
+```
+
+When creating a `CronJob` resource on the kubernetes cluster `krontab` will need to give it a name and choose a template to use. If you omit this information
+like we have in our echo hello example above `krontab` will use the default template (`krontab get template default` if you want to see it) and random uuid will
+be created for the name.
+
+You can optionally choose to specify this information as yaml style comments in your crontab.
+
+```
+# template: default
+0 * * * * echo hello  # name: hello-world
+```
+
+Here `template` has been specified at the document level which will affect all jobs below it until it is redefined. But the `name` info has been specified in line with the job and will only affect that job.
+
+### Edit a job
+
+Once you have some jobs when you run `crontab -e` you will see a crontab file which contains your existing jobs. They may not look exactly like when you created them as this
+crontab file is dynamically generated on the fly. You can make changes to any of the information in the crontab and they will be reflected in ths `CronJob` resources on the kubernetes cluster.
+
+_Note: All changes except renaming will perform an update task on the cluster. Renaming will result in a deletion and creation of a new job._
+
+### Delete a job
+
+You can delete a job by running `crontab -e` and removing the line you wish to delete. This will result in the `CronJob` resource being deleted from the cluster.
+
+### Test a job
+
+You can manually take a job for a test drive any time, even if it is not going to be triggered any time soon.
+
+```
+krontab run job <job name>
+```
+
+**Protip:** You can run one shot jobs without having to create a cron job first. This is useful for submitting one off batch jobs.
+
+```
+krontab run job --template <template name> --command <the command>
+```
+
+### Get running jobs
+
+You can list any currently running jobs.
+
+```
+krontab list running
+```
+
+### View a template
+
+You can print out any template.
+
+```
+krontab get template <template name>
+```
+
+### Edit a template
+
+You can edit templates.
+
+```
+krontab edit template <template name>
+```
+_Note: You cannot edit the `default` template. Also editing a template will not result in jobs being recreated with the modified template._
+
+### Deleting a template
+
+You can delete templates.
+
+```
+krontab delete template <template name>
+```
+
+_Note: You cannot delete the template._
+
+### Creating new templates
+
+You can create new templates. These must be valid Kubernetes [`CronJob`](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/) resources. The `schedule`, `command` and `name` sections will be overridden.
+
+```
+krontab create template <template name>
 ```
 
 ## Contributing
